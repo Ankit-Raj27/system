@@ -32,7 +32,7 @@ export function QuoteScroller() {
           className="relative space-y-4"
         >
           <p className="text-xl md:text-2xl font-medium leading-relaxed italic text-neutral-300">
-            "{currentQuote.text}"
+            &quot;{currentQuote.text}&quot;
           </p>
           <div className="flex items-center gap-3">
             <div className="w-8 h-px bg-blue-500/50" />

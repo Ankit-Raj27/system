@@ -75,7 +75,7 @@ export default async function DashboardPage() {
               ASCENSION
             </h1>
             <p className="text-neutral-500 text-lg font-medium italic border-l-2 border-neutral-800 pl-4 max-w-md">
-              "You are being evaluated. Every action consumes mana. Only those who level up will survive."
+              &quot;You are being evaluated. Every action consumes mana. Only those who level up will survive.&quot;
             </p>
           </div>
           <div className="flex flex-col items-end gap-2">
@@ -175,7 +175,7 @@ export default async function DashboardPage() {
                 </div>
               </div>
               <p className="text-sm text-neutral-400 leading-relaxed font-medium italic border-t border-white/5 pt-6">
-                "The System tracks every breath. Your power level is calculated based on discipline, focus, and output. Do not disappoint the Monarch."
+                &quot;The System tracks every breath. Your power level is calculated based on discipline, focus, and output. Do not disappoint the Monarch.&quot;
               </p>
               
               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-500/5 to-transparent h-[200%] w-full animate-scan pointer-events-none" />
