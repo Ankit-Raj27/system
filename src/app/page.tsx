@@ -5,8 +5,7 @@ import { ProgressChart } from '@/components/ProgressChart';
 import { SystemNotification } from '@/components/SystemNotification';
 import { QuoteScroller } from '@/components/QuoteScroller';
 import { MOTIVATION_REMINDERS } from '@/lib/constants';
-import { Flame, Trophy, Calendar, Target, Shield, Zap } from 'lucide-react';
-
+import { Target, Zap } from 'lucide-react';
 
 export default async function DashboardPage() {
   const [metricsRaw, logsRaw, trendsRaw] = await Promise.all([
@@ -45,17 +44,14 @@ export default async function DashboardPage() {
   return (
     <main className="relative min-h-screen bg-[#050505] text-white p-6 md:p-12 font-sans selection:bg-blue-500/30 overflow-x-hidden">
       
-      {/* Dynamic Background Noise/Texture */}
       <div className="fixed inset-0 pointer-events-none opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
       
       <div className="relative max-w-7xl mx-auto space-y-12">
         
-        {/* System Notifications Overlay */}
         <div className="fixed top-6 right-6 w-80 z-50 pointer-events-auto">
           <SystemNotification messages={MOTIVATION_REMINDERS} type="quest" />
         </div>
 
-        {/* Header Section */}
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-white/5 pb-10">
           <div className="space-y-4">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-sm bg-blue-500/10 border-l-4 border-blue-500 text-blue-400 text-[10px] font-black uppercase tracking-[0.3em]">
@@ -77,42 +73,39 @@ export default async function DashboardPage() {
           </div>
         </header>
 
-        {/* Quest Quote Scroller */}
         <QuoteScroller />
 
-        {/* Status Windows Grid */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatusWindow 
             label="Current Streak" 
             value={`${stats.streak} DAYS`} 
-            icon={Flame} 
+            iconType="flame" 
             color="orange" 
             description="Consecutive Successes"
           />
           <StatusWindow 
             label="Power Level" 
             value={`${stats.successRate}%`} 
-            icon={Target} 
+            iconType="target" 
             color="cyan" 
             description="Overall Consistency"
           />
           <StatusWindow 
             label="Dungeons Cleared" 
             value={stats.totalSuccess} 
-            icon={Trophy} 
+            iconType="trophy" 
             color="green" 
             description="Total Successful Days"
           />
           <StatusWindow 
             label="Current Rank" 
             value="E-RANK" 
-            icon={Shield} 
+            iconType="shield" 
             color="red" 
             description="Promotion Pending"
           />
         </section>
 
-        {/* Growth & Status Section */}
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           <div className="lg:col-span-2 space-y-6">
             <div className="flex items-center justify-between border-b border-white/5 pb-4">
@@ -163,13 +156,11 @@ export default async function DashboardPage() {
                 "The System tracks every breath. Your power level is calculated based on discipline, focus, and output. Do not disappoint the Monarch."
               </p>
               
-              {/* Decorative scanline effect */}
               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-500/5 to-transparent h-[200%] w-full animate-scan pointer-events-none" />
             </div>
           </div>
         </section>
 
-        {/* Battle Logs Section */}
         <section className="space-y-8 pb-20">
           <div className="flex items-center justify-between border-b border-white/5 pb-4">
             <h2 className="text-3xl font-black tracking-tighter flex items-center gap-4">
@@ -186,7 +177,6 @@ export default async function DashboardPage() {
           <EvaluationTable logs={logs} />
         </section>
 
-        {/* Global Footer */}
         <footer className="text-center pt-20 pb-10 space-y-4">
           <div className="text-neutral-800 text-[10px] font-black uppercase tracking-[1em]">
             Shadow Monarch Control Terminal

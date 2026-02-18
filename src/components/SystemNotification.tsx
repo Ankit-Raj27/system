@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Info, Bell, X } from 'lucide-react';
+import { Bell, X, Zap, Trophy, AlertTriangle } from 'lucide-react';
 
 interface SystemNotificationProps {
   messages: string[];
@@ -26,6 +26,14 @@ export function SystemNotification({ messages, type = 'info' }: SystemNotificati
     quest: 'border-orange-500 bg-orange-500/10 text-orange-400',
   };
 
+  const icons = {
+    info: Bell,
+    warning: AlertTriangle,
+    quest: Zap,
+  };
+
+  const Icon = icons[type];
+
   return (
     <AnimatePresence>
       {visible && (
@@ -37,7 +45,7 @@ export function SystemNotification({ messages, type = 'info' }: SystemNotificati
         >
           <div className="flex items-start gap-4">
             <div className="p-2 rounded-md bg-white/5 border border-white/10">
-              <Bell className="w-5 h-5" />
+              <Icon className="w-5 h-5" />
             </div>
             <div className="flex-1 space-y-1">
               <h4 className="text-xs font-black uppercase tracking-widest opacity-70">
@@ -60,7 +68,6 @@ export function SystemNotification({ messages, type = 'info' }: SystemNotificati
             </button>
           </div>
           
-          {/* Mana Bar/Progress Indicator */}
           <div className="absolute bottom-0 left-0 h-0.5 bg-current opacity-30" 
                style={{ width: '100%' }}>
             <motion.div 

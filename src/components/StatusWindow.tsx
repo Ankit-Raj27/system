@@ -2,17 +2,26 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { LucideIcon } from 'lucide-react';
+import { Flame, Trophy, Shield, Target } from 'lucide-react';
 
 interface StatusWindowProps {
   label: string;
   value: string | number;
-  icon: LucideIcon;
+  iconType: 'flame' | 'trophy' | 'shield' | 'target';
   color?: 'cyan' | 'red' | 'orange' | 'green';
   description?: string;
 }
 
-export function StatusWindow({ label, value, icon: Icon, color = 'cyan', description }: StatusWindowProps) {
+export function StatusWindow({ label, value, iconType, color = 'cyan', description }: StatusWindowProps) {
+  const icons = {
+    flame: Flame,
+    trophy: Trophy,
+    shield: Shield,
+    target: Target,
+  };
+
+  const Icon = icons[iconType];
+
   const colorStyles = {
     cyan: 'border-cyan-500/30 text-cyan-400 shadow-[0_0_20px_-10px_rgba(6,182,212,0.5)]',
     red: 'border-red-500/30 text-red-400 shadow-[0_0_20px_-10px_rgba(239,68,68,0.5)]',
@@ -52,7 +61,6 @@ export function StatusWindow({ label, value, icon: Icon, color = 'cyan', descrip
         )}
       </div>
 
-      {/* Futuristic Corner Accents */}
       <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-current rounded-tl-sm opacity-20" />
       <div className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-current rounded-tr-sm opacity-20" />
       <div className="absolute bottom-0 left-0 w-2 h-2 border-b-2 border-l-2 border-current rounded-bl-sm opacity-20" />
