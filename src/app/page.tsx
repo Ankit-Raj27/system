@@ -11,9 +11,9 @@ import { AddQuestModal } from '@/components/AddQuestModal';
 import { MOTIVATION_REMINDERS } from '@/lib/constants';
 import { Zap, Activity, Brain, Dumbbell, Timer, Target, Trophy, Flame, ShieldAlert } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
-  // Individual result handling for maximum resiliency
   const safeFetch = async (fn: () => Promise<any>, fallback: any, name: string) => {
     try {
       return await fn();
@@ -43,7 +43,6 @@ export default async function DashboardPage() {
     safeFetch(getOrCreateHunter, null, "Hunter")
   ]);
 
-  // Extract Notion Metrics
   const metricRow = (metricsRaw[0] as any)?.properties || {};
   const stats = {
     streak: metricRow['Current Streak']?.number || 0,
@@ -52,7 +51,6 @@ export default async function DashboardPage() {
     totalSuccess: metricRow['Total Successes']?.number || 0
   };
 
-  // Transform Quests
   const mapQuest = (page: any, nameKey: string, categoryKey: string) => ({
     id: page.id,
     name: page.properties[nameKey]?.title?.[0]?.plain_text || 'Unknown',
@@ -66,7 +64,6 @@ export default async function DashboardPage() {
   const hldQuests = hldRaw.map(p => mapQuest(p, 'Concept', 'Topic'));
   const cohortQuests = cohortRaw.map(p => mapQuest(p, 'Module', 'Track'));
 
-  // Calculate radar data
   const getCompletion = (list: any[]) => {
     if (list.length === 0) return 0;
     const completed = list.filter(q => ['Mastered', 'Shipped', 'Dungeon Cleared'].includes(q.status)).length;
@@ -81,7 +78,6 @@ export default async function DashboardPage() {
     { label: 'SYSTEM', value: stats.successRate / 10 }
   ];
 
-  // Extract logs
   const logs = logsRaw.map((page: any) => ({
     id: page.id,
     date: page.properties.Date?.title?.[0]?.plain_text || 'N/A',
@@ -93,7 +89,6 @@ export default async function DashboardPage() {
     reason: page.properties.Reason?.rich_text?.[0]?.plain_text || 'No reason provided.'
   }));
 
-  // Extract trends
   const trends = trendsRaw.map((page: any) => ({
     week: page.properties.Week?.title?.[0]?.plain_text || 'W00',
     score: page.properties['Avg Score']?.number || 0
@@ -108,7 +103,6 @@ export default async function DashboardPage() {
           <SystemNotification messages={MOTIVATION_REMINDERS} type="quest" />
         </div>
 
-        {/* Top Header Grid */}
         <header className="grid grid-cols-1 lg:grid-cols-2 gap-8 border-b border-white/5 pb-10">
           <div className="space-y-4">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-sm bg-blue-500/10 border-l-4 border-blue-500 text-blue-400 text-[10px] font-black uppercase tracking-[0.3em]">
@@ -127,7 +121,6 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          {/* Hunter Vitals */}
           <div className="space-y-6">
             {!hunter ? (
                <div className="p-4 rounded border border-red-500/20 bg-red-500/5 text-red-400/50 text-[10px] font-mono flex items-center gap-2 uppercase tracking-widest">
@@ -169,7 +162,6 @@ export default async function DashboardPage() {
 
         <QuoteScroller />
 
-        {/* Hunter Attributes Window */}
         <section className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <div className="p-4 rounded border border-white/5 bg-white/5 flex flex-col items-center justify-center gap-2 group hover:border-blue-500/50 transition-colors">
             <Dumbbell className="w-4 h-4 text-blue-400 opacity-50 group-hover:opacity-100" />
@@ -198,7 +190,6 @@ export default async function DashboardPage() {
           </div>
         </section>
 
-        {/* Metrics Grid */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatusWindow label="Streak" value={stats.streak} iconType="flame" color="orange" />
           <StatusWindow label="Success Rate" value={`${stats.successRate}%`} iconType="target" color="cyan" />
@@ -206,7 +197,6 @@ export default async function DashboardPage() {
           <StatusWindow label="Power Level" value={`${stats.successRate}%`} iconType="zap" color="cyan" />
         </section>
 
-        {/* Progress Visuals */}
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           <div className="lg:col-span-1 space-y-6">
             <div className="border-b border-white/5 pb-4">
@@ -229,15 +219,14 @@ export default async function DashboardPage() {
           </div>
         </section>
 
-        {/* Tables Grid */}
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-10">
           <div className="space-y-12">
-             <QuestTable title="DSA DUNGEON" quests={dsaQuests.slice(0, 10)} />
-             <QuestTable title="LLD BLUEPRINTS" quests={lldQuests.slice(0, 10)} />
+             <QuestTable title="DSA DUNGEON" quests={dsaQuests.slice(0, 5)} type="DSA" />
+             <QuestTable title="LLD BLUEPRINTS" quests={lldQuests.slice(0, 5)} type="LLD" />
           </div>
           <div className="space-y-12">
-             <QuestTable title="HLD SYSTEMS" quests={hldQuests.slice(0, 10)} />
-             <QuestTable title="BATTLE LOG" quests={logs.slice(0, 5).map(l => ({ id: l.id, name: l.date, status: l.verdict, rank: l.focus, category: l.reason.substring(0, 30) + '...' }))} />
+             <QuestTable title="HLD SYSTEMS" quests={hldQuests.slice(0, 5)} type="HLD" />
+             <QuestTable title="BATTLE LOG" quests={logs.slice(0, 5).map(l => ({ id: l.id, name: l.date, status: l.verdict, rank: l.focus, category: l.reason.substring(0, 30) + '...' }))} type="LOG" />
           </div>
         </section>
 

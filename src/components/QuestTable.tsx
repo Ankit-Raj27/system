@@ -1,4 +1,7 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
+import { CheckCircle2, Loader2 } from 'lucide-react';
 
 interface QuestEntry {
   id: string;
@@ -8,7 +11,27 @@ interface QuestEntry {
   category: string;
 }
 
-export function QuestTable({ title, quests }: { title: string, quests: QuestEntry[] }) {
+export function QuestTable({ title, quests, type }: { title: string, quests: QuestEntry[], type: string }) {
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+
+  const handleComplete = async (notionPageId: string) => {
+    setLoadingId(notionPageId);
+    try {
+      const res = await fetch('/api/system/complete-quest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notionPageId, type })
+      });
+      if (res.ok) {
+        window.location.reload();
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-black uppercase tracking-widest text-neutral-400 border-l-2 border-blue-500 pl-3">
@@ -19,29 +42,22 @@ export function QuestTable({ title, quests }: { title: string, quests: QuestEntr
           <thead>
             <tr className="border-b border-gray-800 bg-white/5">
               <th className="p-4 text-xs font-semibold text-gray-400 uppercase">Quest Name</th>
-              <th className="p-4 text-xs font-semibold text-gray-400 uppercase">Status</th>
               <th className="p-4 text-xs font-semibold text-gray-400 uppercase">Rank</th>
-              <th className="p-4 text-xs font-semibold text-gray-400 uppercase">Category</th>
+              <th className="p-4 text-xs font-semibold text-gray-400 uppercase">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-800">
             {quests.length === 0 ? (
               <tr>
-                <td colSpan={4} className="p-8 text-center text-neutral-600 italic">No quests discovered in this dungeon.</td>
+                <td colSpan={3} className="p-8 text-center text-neutral-600 italic uppercase text-[10px]">No quests discovered in this dungeon.</td>
               </tr>
             ) : quests.map((quest) => (
-              <tr key={quest.id} className="hover:bg-white/5 transition-colors">
-                <td className="p-4 text-sm font-bold text-gray-300">{quest.name}</td>
-                <td className="p-4">
-                  <span className={`px-2 py-1 text-[10px] font-black rounded uppercase ${
-                    quest.status === 'Mastered' || quest.status === 'Shipped' || quest.status === 'Dungeon Cleared'
-                      ? 'text-green-400 bg-green-400/10' 
-                      : quest.status === 'Learning' || quest.status === 'Building' || quest.status === 'Raid in Progress'
-                      ? 'text-blue-400 bg-blue-400/10'
-                      : 'text-neutral-500 bg-neutral-500/10'
-                  }`}>
-                    {quest.status}
-                  </span>
+              <tr key={quest.id} className="hover:bg-white/5 transition-colors group">
+                <td className="p-4 text-sm font-bold text-gray-300">
+                  <div className="flex flex-col">
+                    <span>{quest.name}</span>
+                    <span className="text-[9px] text-neutral-600 uppercase tracking-tighter">{quest.category}</span>
+                  </div>
                 </td>
                 <td className="p-4">
                   <span className={`font-mono text-xs font-bold ${
@@ -52,7 +68,22 @@ export function QuestTable({ title, quests }: { title: string, quests: QuestEntr
                     {quest.rank}
                   </span>
                 </td>
-                <td className="p-4 text-xs text-neutral-500 tracking-tighter uppercase font-medium">{quest.category}</td>
+                <td className="p-4">
+                  {['Mastered', 'Shipped', 'Dungeon Cleared'].includes(quest.status) ? (
+                    <div className="flex items-center gap-1 text-green-500">
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span className="text-[10px] font-black uppercase">Cleared</span>
+                    </div>
+                  ) : (
+                    <button 
+                      onClick={() => handleComplete(quest.id)}
+                      disabled={!!loadingId}
+                      className="flex items-center gap-2 px-3 py-1 rounded bg-blue-600/10 border border-blue-500/30 text-blue-400 text-[10px] font-black uppercase hover:bg-blue-600 hover:text-white transition-all"
+                    >
+                      {loadingId === quest.id ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Enter'}
+                    </button>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

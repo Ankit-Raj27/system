@@ -1,66 +1,52 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Client } from '@notionhq/client';
 import { prisma } from '@/lib/prisma';
 import { calculateLevelRankAndRollover } from '@/lib/engine/leveling';
 
+const notion = new Client({ auth: process.env.NOTION_API_KEY });
+
 export async function POST(req: NextRequest) {
   try {
-    const { questId, hunterId } = await req.json();
+    const { notionPageId, hunterId, type } = await req.json();
 
-    // 1. Fetch Quest and Hunter
-    const quest = await prisma.quest.findUnique({
-      where: { id: questId },
-    });
+    // 1. Fetch the Quest details from Notion to validate reward
+    const page: any = await notion.pages.retrieve({ page_id: notionPageId });
+    const properties = page.properties;
 
-    if (!quest || quest.completedAt || quest.failedAt) {
-      return NextResponse.json({ error: "Quest invalid or already completed" }, { status: 400 });
-    }
-
-    if (quest.deadline && new Date() > quest.deadline) {
-      return NextResponse.json({ error: "Quest deadline passed" }, { status: 400 });
-    }
-
-    // 2. Grant Rewards
-    const hunter = await prisma.hunter.update({
-      where: { id: hunterId },
-      data: {
-        exp: { increment: quest.expReward },
-        gold: { increment: quest.goldReward },
-        // Apply stat rewards if JSON exists
-        ...(quest.statReward as any)
-      }
-    });
-
-    // 3. Mark Quest Completed
-    await prisma.quest.update({
-      where: { id: questId },
-      data: { completedAt: new Date() }
-    });
-
-    // 4. Check for Boss HP reduction (if quest difficulty >= B)
-    if (quest.difficulty === 'B' || quest.difficulty === 'A' || quest.difficulty === 'S') {
-      const activeBoss = await prisma.boss.findFirst({
-        where: { hunterId, completed: false }
-      });
-      
-      if (activeBoss) {
-        const damage = Math.floor(quest.expReward / 10);
-        const newHp = Math.max(0, activeBoss.hp - damage);
-        
-        await prisma.boss.update({
-          where: { id: activeBoss.id },
-          data: { 
-            hp: newHp,
-            completed: newHp === 0
-          }
-        });
-      }
-    }
-
-    // 5. Recalculate Rank and Level
-    const newStats = calculateLevelRankAndRollover(hunter.exp);
+    // Detect properties based on database type (DSA, LLD, HLD, etc.)
+    const title = properties.Quest?.title[0]?.plain_text || properties.Concept?.title[0]?.plain_text || properties.Module?.title[0]?.plain_text;
+    const rankValue = properties.Rank?.select?.name || 'E-Rank (Easy)';
     
+    // Calculate Reward based on Rank
+    let expReward = 50;
+    let goldReward = 10;
+    if (rankValue.includes('C')) expReward = 100;
+    if (rankValue.includes('S')) expReward = 250;
+
+    // 2. Update Notion: Mark as Cleared
+    await notion.pages.update({
+      page_id: notionPageId,
+      properties: {
+        'Status': { select: { name: type === 'DSA' ? 'Dungeon Cleared' : 'Mastered' } }
+      }
+    });
+
+    // 3. Update Prisma: Grant Hunter Rewards
+    const hunter = await prisma.hunter.update({
+      where: { id: hunterId || 'ankit-shadow-monarch' },
+      data: {
+        exp: { increment: expReward },
+        gold: { increment: goldReward },
+        discipline: { increment: 1 },
+        intelligence: { increment: type === 'HLD' || type === 'LLD' ? 2 : 0 },
+        strength: { increment: type === 'FITNESS' ? 2 : 0 }
+      }
+    });
+
+    // 4. Handle Leveling/Ranking
+    const newStats = calculateLevelRankAndRollover(hunter.exp);
     await prisma.hunter.update({
-      where: { id: hunterId },
+      where: { id: hunter.id },
       data: {
         level: newStats.level,
         rank: newStats.rank as any
@@ -69,14 +55,14 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ 
       success: true, 
-      hunter: {
-        level: newStats.level,
-        rank: newStats.rank,
-        exp: hunter.exp
-      } 
+      title,
+      reward: { exp: expReward, gold: goldReward },
+      newLevel: newStats.level,
+      newRank: newStats.rank
     });
 
   } catch (error: any) {
+    console.error("Completion Bridge Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
