@@ -55,7 +55,8 @@ export default async function DashboardPage() {
     name: page.properties[nameKey]?.title?.[0]?.plain_text || 'Unknown',
     status: page.properties.Status?.select?.name || 'N/A',
     rank: page.properties.Rank?.select?.name || 'N/A',
-    category: page.properties[categoryKey]?.select?.name || page.properties[categoryKey]?.rich_text?.[0]?.plain_text || 'N/A'
+    category: page.properties[categoryKey]?.select?.name || page.properties[categoryKey]?.rich_text?.[0]?.plain_text || 'N/A',
+    url: page.properties.Portal?.url || null
   });
 
   const dsaQuests = dsaRaw.map(p => mapQuest(p, 'Quest', 'Dungeon'));
