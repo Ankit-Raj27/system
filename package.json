@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "vercel-build": "next build",
     "build:gh": "next build",
     "deploy": "npm run build:gh && gh-pages -d out"
   },
