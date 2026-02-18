@@ -7,10 +7,6 @@ import { QuoteScroller } from '@/components/QuoteScroller';
 import { MOTIVATION_REMINDERS } from '@/lib/constants';
 import { Zap } from 'lucide-react';
 
-// force-dynamic is only compatible with SSR (Vercel)
-// For static export (GitHub Pages), this must be removed.
-// We handle this via environment detection in next.config.js
-export const dynamic = process.env.GITHUB_PAGES ? 'force-static' : 'force-dynamic';
 
 export default async function DashboardPage() {
   let metricsRaw: any[] = [];
