@@ -2,22 +2,24 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Flame, Trophy, Shield, Target } from 'lucide-react';
+import { Flame, Trophy, Shield, Target, Zap } from 'lucide-react';
 
 interface StatusWindowProps {
   label: string;
   value: string | number;
-  iconType: 'flame' | 'trophy' | 'shield' | 'target';
+  iconType: 'flame' | 'trophy' | 'shield' | 'target' | 'zap';
   color?: 'cyan' | 'red' | 'orange' | 'green';
   description?: string;
+  onClick?: () => void;
 }
 
-export function StatusWindow({ label, value, iconType, color = 'cyan', description }: StatusWindowProps) {
+export function StatusWindow({ label, value, iconType, color = 'cyan', description, onClick }: StatusWindowProps) {
   const icons = {
     flame: Flame,
     trophy: Trophy,
     shield: Shield,
     target: Target,
+    zap: Zap,
   };
 
   const Icon = icons[iconType];
@@ -29,23 +31,18 @@ export function StatusWindow({ label, value, iconType, color = 'cyan', descripti
     green: 'border-green-500/30 text-green-400 shadow-[0_0_20px_-10px_rgba(34,197,94,0.5)]',
   };
 
-  const glowStyles = {
-    cyan: 'group-hover:shadow-[0_0_30px_-5px_rgba(6,182,212,0.3)]',
-    red: 'group-hover:shadow-[0_0_30px_-5px_rgba(239,68,68,0.3)]',
-    orange: 'group-hover:shadow-[0_0_30px_-5px_rgba(249,115,22,0.3)]',
-    green: 'group-hover:shadow-[0_0_30px_-5px_rgba(34,197,94,0.3)]',
-  };
-
   return (
     <motion.div
       whileHover={{ scale: 1.02, y: -2 }}
-      className={`group relative p-6 rounded-lg border bg-neutral-900/60 backdrop-blur-xl transition-all duration-300 ${colorStyles[color]} ${glowStyles[color]}`}
+      whileTap={{ scale: 0.98 }}
+      onClick={onClick}
+      className={`group relative p-6 rounded-lg border bg-neutral-900/60 backdrop-blur-xl transition-all duration-300 cursor-pointer ${colorStyles[color]}`}
     >
       <div className="flex items-center justify-between mb-4">
-        <span className="text-[10px] font-black uppercase tracking-[0.25em] opacity-60 font-mono">
+        <span className="text-[10px] font-black uppercase tracking-[0.25em] opacity-60 font-mono text-current">
           {label}
         </span>
-        <div className={`p-2 rounded-md bg-white/5 border border-white/10 group-hover:border-${color}-500/40 transition-colors`}>
+        <div className="p-2 rounded-md bg-white/5 border border-white/10 group-hover:border-current transition-colors">
           <Icon className="w-4 h-4" />
         </div>
       </div>
@@ -55,7 +52,7 @@ export function StatusWindow({ label, value, iconType, color = 'cyan', descripti
           {value}
         </div>
         {description && (
-          <p className="text-[10px] font-medium opacity-50 uppercase tracking-widest leading-relaxed">
+          <p className="text-[10px] font-medium opacity-50 uppercase tracking-widest leading-relaxed text-current">
             {description}
           </p>
         )}
