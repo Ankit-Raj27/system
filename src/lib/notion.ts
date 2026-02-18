@@ -5,16 +5,14 @@ const notion = new Client({
 });
 
 export async function getMetrics() {
-  // @ts-ignore
-  const response = await notion.dataSources.query({
+  const response = await (notion as any).dataSources.query({
     data_source_id: process.env.NOTION_METRICS_DB_ID!,
   });
   return response.results;
 }
 
 export async function getLogs() {
-  // @ts-ignore
-  const response = await notion.dataSources.query({
+  const response = await (notion as any).dataSources.query({
     data_source_id: process.env.NOTION_LOGS_DB_ID!,
     sorts: [{ property: "Date", direction: "descending" }],
   });
@@ -22,8 +20,7 @@ export async function getLogs() {
 }
 
 export async function getTrends() {
-  // @ts-ignore
-  const response = await notion.dataSources.query({
+  const response = await (notion as any).dataSources.query({
     data_source_id: process.env.NOTION_TREND_DB_ID!,
     sorts: [{ property: "Week", direction: "ascending" }],
   });
