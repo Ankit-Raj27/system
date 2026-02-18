@@ -2,14 +2,13 @@
 const nextConfig = {
   output: 'export',
   basePath: '/system',
+  assetPrefix: '/system/',
+  trailingSlash: true,
   images: {
     unoptimized: true,
   },
   typescript: {
     ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
   },
 };
 
