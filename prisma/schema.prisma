@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Rank {
+  E
+  D
+  C
+  B
+  A
+  S
+}
+
+enum QuestType {
+  DAILY
+  MAIN
+  SIDE
+  PENALTY
+  BOSS
+}
+
+enum Category {
+  WORK
+  LEARNING
+  FITNESS
+  LIFE
+}
+
+enum Difficulty {
+  D
+  C
+  B
+  A
+  S
+}
+
+model Hunter {
+  id           String           @id @default(cuid())
+  level        Int              @default(1)
+  rank         Rank             @default(E)
+  exp          Int              @default(0)
+  gold         Int              @default(0)
+  fatigue      Int              @default(0)
+  mana         Int              @default(100)
+  strength     Int              @default(10)
+  intelligence Int              @default(10)
+  endurance    Int              @default(10)
+  focus        Int              @default(10)
+  discipline   Int              @default(10)
+  streakDays   Int              @default(0)
+  lastActiveAt DateTime         @default(now())
+  createdAt    DateTime         @default(now())
+  
+  quests       Quest[]
+  dungeons     DungeonSession[]
+  bosses       Boss[]
+  penalties    Penalty[]
+}
+
+model Quest {
+  id           String    @id @default(cuid())
+  hunterId     String
+  hunter       Hunter    @relation(fields: [hunterId], references: [id])
+  type         QuestType
+  category     Category
+  title        String
+  description  String?
+  difficulty   Difficulty @default(D)
+  expReward    Int
+  goldReward   Int
+  statReward   Json?     // { strength: 1, ... }
+  deadline     DateTime?
+  completedAt  DateTime?
+  failedAt     DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([hunterId])
+}
+
+model DungeonSession {
+  id           String    @id @default(cuid())
+  hunterId     String
+  hunter       Hunter    @relation(fields: [hunterId], references: [id])
+  startedAt    DateTime  @default(now())
+  endedAt      DateTime?
+  duration     Int?      // In seconds
+  focusScore   Int?
+  distractions Int       @default(0)
+  expGained    Int       @default(0)
+  success      Boolean   @default(false)
+
+  @@index([hunterId])
+}
+
+model Boss {
+  id        String   @id @default(cuid())
+  hunterId  String
+  hunter    Hunter   @relation(fields: [hunterId], references: [id])
+  name      String
+  hp        Int
+  maxHp     Int
+  deadline  DateTime?
+  completed Boolean  @default(false)
+
+  @@index([hunterId])
+}
+
+model Penalty {
+  id        String   @id @default(cuid())
+  hunterId  String
+  hunter    Hunter   @relation(fields: [hunterId], references: [id])
+  reason    String
+  resolved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([hunterId])
+}
