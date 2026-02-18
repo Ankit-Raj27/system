@@ -226,12 +226,26 @@ export default async function DashboardPage() {
           </div>
           <div className="space-y-12">
              <QuestTable title="HLD SYSTEMS" quests={hldQuests.slice(0, 5)} type="HLD" />
-             <QuestTable title="BATTLE LOG" quests={logs.slice(0, 5).map(l => ({ id: l.id, name: l.date, status: l.verdict, rank: l.focus, category: l.reason.substring(0, 30) + '...' }))} type="LOG" />
+             <QuestTable title="COHORT TRACKS" quests={cohortQuests.slice(0, 5)} type="COHORT" />
           </div>
         </section>
 
+        {/* Full-width Battle Logs Section at the Bottom */}
+        <section className="space-y-8 pt-12 border-t border-white/5">
+          <div className="flex justify-between items-center px-2">
+            <h2 className="text-3xl font-black tracking-tighter uppercase opacity-90 flex items-center gap-4">
+              <div className="w-2 h-8 bg-white shadow-[0_0_15px_rgba(255,255,255,0.3)]" />
+              BATTLE LOGS
+            </h2>
+            <div className="px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-green-500 text-[10px] font-black uppercase tracking-[0.2em] animate-pulse">
+              System Judge Active
+            </div>
+          </div>
+          <EvaluationTable logs={logs} />
+        </section>
+
         <footer className="text-center pt-20 text-neutral-800 text-[10px] font-black uppercase tracking-[1.5em] opacity-30">
-          Shadow Monarch Control Terminal v1.2.6
+          Shadow Monarch Control Terminal
         </footer>
 
         <AddQuestModal />
