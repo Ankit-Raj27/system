@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "deploy": "gh-pages -d out"
+    "build:gh": "next build",
+    "deploy": "npm run build:gh && gh-pages -d out"
   },
   "dependencies": {
     "@notionhq/client": "^5.9.0",
