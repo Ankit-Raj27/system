@@ -26,3 +26,31 @@ export async function getTrends() {
   });
   return response.results;
 }
+
+export async function getDSAQuests() {
+  const response = await (notion as any).dataSources.query({
+    data_source_id: process.env.NOTION_DSA_DB_ID!,
+  });
+  return response.results;
+}
+
+export async function getLLDQuests() {
+  const response = await (notion as any).dataSources.query({
+    data_source_id: process.env.NOTION_LLD_DB_ID!,
+  });
+  return response.results;
+}
+
+export async function getHLDQuests() {
+  const response = await (notion as any).dataSources.query({
+    data_source_id: process.env.NOTION_HLD_DB_ID!,
+  });
+  return response.results;
+}
+
+export async function getCohortModules() {
+  const response = await (notion as any).dataSources.query({
+    data_source_id: process.env.NOTION_COHORT_DB_ID!,
+  });
+  return response.results;
+}

@@ -1,28 +1,43 @@
-import { getMetrics, getLogs, getTrends } from '@/lib/notion';
+import { getMetrics, getLogs, getTrends, getDSAQuests, getLLDQuests, getHLDQuests, getCohortModules } from '@/lib/notion';
 import { StatusWindow } from '@/components/StatusWindow';
 import { EvaluationTable } from '@/components/EvaluationTable';
 import { ProgressChart } from '@/components/ProgressChart';
 import { SystemNotification } from '@/components/SystemNotification';
 import { QuoteScroller } from '@/components/QuoteScroller';
+import { QuestTable } from '@/components/QuestTable';
+import { MasteryRadar } from '@/components/MasteryRadar';
 import { MOTIVATION_REMINDERS } from '@/lib/constants';
-import { Zap } from 'lucide-react';
+import { Target, Zap, Swords, Box, Layout, GraduationCap } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
   let metricsRaw: any[] = [];
   let logsRaw: any[] = [];
   let trendsRaw: any[] = [];
+  let dsaRaw: any[] = [];
+  let lldRaw: any[] = [];
+  let hldRaw: any[] = [];
+  let cohortRaw: any[] = [];
   let error: string | null = null;
 
   try {
     const results = await Promise.all([
       getMetrics(),
       getLogs(),
-      getTrends()
+      getTrends(),
+      getDSAQuests(),
+      getLLDQuests(),
+      getHLDQuests(),
+      getCohortModules()
     ]);
     metricsRaw = results[0] || [];
     logsRaw = results[1] || [];
     trendsRaw = results[2] || [];
+    dsaRaw = results[3] || [];
+    lldRaw = results[4] || [];
+    hldRaw = results[5] || [];
+    cohortRaw = results[6] || [];
   } catch (err: any) {
     console.error("Notion Sync Failure:", err);
     error = err.message || "Failed to synchronize with Notion.";
@@ -36,6 +51,35 @@ export default async function DashboardPage() {
     countdown: metricRow['Countdown']?.formula?.number || 0,
     totalSuccess: metricRow['Total Successes']?.number || 0
   };
+
+  // Transform Quests
+  const mapQuest = (page: any, nameKey: string, categoryKey: string) => ({
+    id: page.id,
+    name: page.properties[nameKey]?.title[0]?.plain_text || 'Unknown',
+    status: page.properties.Status?.select?.name || 'N/A',
+    rank: page.properties.Rank?.select?.name || 'N/A',
+    category: page.properties[categoryKey]?.select?.name || page.properties[categoryKey]?.rich_text?.[0]?.plain_text || 'N/A'
+  });
+
+  const dsaQuests = dsaRaw.map(p => mapQuest(p, 'Quest', 'Dungeon'));
+  const lldQuests = lldRaw.map(p => mapQuest(p, 'Quest', 'Category'));
+  const hldQuests = hldRaw.map(p => mapQuest(p, 'Concept', 'Topic'));
+  const cohortQuests = cohortRaw.map(p => mapQuest(p, 'Module', 'Track'));
+
+  // Calculate radar data
+  const getCompletion = (list: any[]) => {
+    if (list.length === 0) return 0;
+    const completed = list.filter(q => ['Mastered', 'Shipped', 'Dungeon Cleared'].includes(q.status)).length;
+    return (completed / list.length) * 10;
+  };
+
+  const radarData = [
+    { label: 'DSA', value: getCompletion(dsaQuests) },
+    { label: 'LLD', value: getCompletion(lldQuests) },
+    { label: 'HLD', value: getCompletion(hldQuests) },
+    { label: 'COHORT', value: getCompletion(cohortQuests) },
+    { label: 'SYSTEM', value: stats.successRate / 10 }
+  ];
 
   // Extract logs
   const logs = logsRaw.map((page: any) => ({
@@ -57,11 +101,9 @@ export default async function DashboardPage() {
 
   return (
     <main className="relative min-h-screen bg-[#050505] text-white p-6 md:p-12 font-sans selection:bg-blue-500/30 overflow-x-hidden">
-      
       <div className="fixed inset-0 pointer-events-none opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
       
       <div className="relative max-w-7xl mx-auto space-y-12">
-        
         <div className="fixed top-6 right-6 w-80 z-50 pointer-events-auto">
           <SystemNotification messages={MOTIVATION_REMINDERS} type="quest" />
         </div>
@@ -69,145 +111,79 @@ export default async function DashboardPage() {
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-white/5 pb-10">
           <div className="space-y-4">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-sm bg-blue-500/10 border-l-4 border-blue-500 text-blue-400 text-[10px] font-black uppercase tracking-[0.3em]">
-              <Zap className="w-3 h-3 fill-current" /> [ System v1.0.6 Online ]
+              <Zap className="w-3 h-3 fill-current" /> [ System v1.1.0 Online ]
             </div>
             <h1 className="text-5xl md:text-8xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-neutral-600">
               ASCENSION
             </h1>
-            <p className="text-neutral-500 text-lg font-medium italic border-l-2 border-neutral-800 pl-4 max-w-md">
-              &quot;You are being evaluated. Every action consumes mana. Only those who level up will survive.&quot;
-            </p>
           </div>
           <div className="flex flex-col items-end gap-2">
             <div className="text-sm font-black uppercase tracking-[0.4em] text-neutral-600">Time Until Reset</div>
             <div className="text-7xl font-black text-orange-500 tabular-nums tracking-tighter shadow-orange-500/20 drop-shadow-2xl">
               {stats.countdown}
             </div>
-            <div className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Days to S-Rank Deadline</div>
           </div>
         </header>
 
         {error && (
           <div className="p-4 rounded border border-red-500/50 bg-red-500/10 text-red-400 text-sm font-mono">
             [ SYSTEM ERROR ]: {error}
-            <br/>
-            Check Vercel Environment Variables and Notion Integrations.
           </div>
         )}
 
         <QuoteScroller />
 
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatusWindow 
-            label="Current Streak" 
-            value={`${stats.streak} DAYS`} 
-            iconType="flame" 
-            color="orange" 
-            description="Consecutive Successes"
-          />
-          <StatusWindow 
-            label="Power Level" 
-            value={`${stats.successRate}%`} 
-            iconType="target" 
-            color="cyan" 
-            description="Overall Consistency"
-          />
-          <StatusWindow 
-            label="Dungeons Cleared" 
-            value={stats.totalSuccess} 
-            iconType="trophy" 
-            color="green" 
-            description="Total Successful Days"
-          />
-          <StatusWindow 
-            label="Current Rank" 
-            value="E-RANK" 
-            iconType="shield" 
-            color="red" 
-            description="Promotion Pending"
-          />
+          <StatusWindow label="Streak" value={stats.streak} iconType="flame" color="orange" />
+          <StatusWindow label="Power" value={`${stats.successRate}%`} iconType="target" color="cyan" />
+          <StatusWindow label="Clears" value={stats.totalSuccess} iconType="trophy" color="green" />
+          <StatusWindow label="Rank" value="E-RANK" iconType="shield" color="red" />
         </section>
 
+        {/* Global Mastery Radar */}
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+          <div className="lg:col-span-1 space-y-6">
+            <div className="border-b border-white/5 pb-4">
+              <h2 className="text-xl font-black tracking-tight flex items-center gap-3">
+                <div className="w-1 h-6 bg-blue-500" />
+                COMPETENCE RADAR
+              </h2>
+            </div>
+            <MasteryRadar data={radarData} />
+          </div>
           <div className="lg:col-span-2 space-y-6">
-            <div className="flex items-center justify-between border-b border-white/5 pb-4">
-              <h2 className="text-2xl font-black tracking-tight flex items-center gap-3">
-                <div className="w-1.5 h-6 bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+            <div className="border-b border-white/5 pb-4">
+              <h2 className="text-xl font-black tracking-tight flex items-center gap-3">
+                <div className="w-1 h-6 bg-orange-500" />
                 MASTERY TREND
               </h2>
-              <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Growth Analytics</span>
             </div>
             <ProgressChart trends={trends} />
           </div>
-          
-          <div className="space-y-6">
-            <div className="border-b border-white/5 pb-4">
-              <h2 className="text-2xl font-black tracking-tight flex items-center gap-3">
-                <div className="w-1.5 h-6 bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.5)]" />
-                SYSTEM LOG
-              </h2>
-            </div>
-            <div className="p-8 rounded-lg border border-white/5 bg-gradient-to-b from-neutral-900 to-black space-y-8 relative overflow-hidden">
-              <div className="space-y-4 relative z-10">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-[10px] font-black text-neutral-500 uppercase tracking-widest">
-                    <span>Soul Sync Rate</span>
-                    <span className="text-blue-400 font-mono">{stats.successRate}%</span>
-                  </div>
-                  <div className="h-1 w-full bg-neutral-800 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-blue-600 to-cyan-400 rounded-full shadow-[0_0_10px_rgba(34,211,238,0.5)] transition-all duration-1000" 
-                      style={{ width: `${stats.successRate}%` }} 
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-[10px] font-black text-neutral-500 uppercase tracking-widest">
-                    <span>Rank Progression</span>
-                    <span className="text-orange-400 font-mono">15%</span>
-                  </div>
-                  <div className="h-1 w-full bg-neutral-800 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-orange-600 to-yellow-400 rounded-full shadow-[0_0_10px_rgba(249,115,22,0.5)] transition-all duration-1000" 
-                      style={{ width: `15%` }} 
-                    />
-                  </div>
-                </div>
-              </div>
-              <p className="text-sm text-neutral-400 leading-relaxed font-medium italic border-t border-white/5 pt-6">
-                &quot;The System tracks every breath. Your power level is calculated based on discipline, focus, and output. Do not disappoint the Monarch.&quot;
-              </p>
-              
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-500/5 to-transparent h-[200%] w-full animate-scan pointer-events-none" />
-            </div>
+        </section>
+
+        {/* Dungeon Sections (Quests) */}
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-10">
+          <div className="space-y-10">
+             <QuestTable title="DSA DUNGEON" quests={dsaQuests.slice(0, 5)} />
+             <QuestTable title="LLD BLUEPRINTS" quests={lldQuests.slice(0, 5)} />
+          </div>
+          <div className="space-y-10">
+             <QuestTable title="HLD SYSTEMS" quests={hldQuests.slice(0, 5)} />
+             <QuestTable title="COHORT MODULES" quests={cohortQuests.slice(0, 5)} />
           </div>
         </section>
 
-        <section className="space-y-8 pb-20">
-          <div className="flex items-center justify-between border-b border-white/5 pb-4">
-            <h2 className="text-3xl font-black tracking-tighter flex items-center gap-4">
-              <div className="w-1.5 h-10 bg-white" />
-              BATTLE LOGS
-            </h2>
-            <div className="flex gap-4">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-[10px] font-bold text-neutral-500 uppercase">Live Feed</span>
-              </div>
-            </div>
+        <section className="space-y-8">
+          <div className="border-b border-white/5 pb-4">
+            <h2 className="text-2xl font-black tracking-tighter">BATTLE LOGS</h2>
           </div>
           <EvaluationTable logs={logs} />
         </section>
 
-        <footer className="text-center pt-20 pb-10 space-y-4">
-          <div className="text-neutral-800 text-[10px] font-black uppercase tracking-[1em]">
-            Shadow Monarch Control Terminal
-          </div>
-          <p className="text-neutral-700 text-xs font-mono uppercase tracking-widest">
-            Level up or be forgotten • v1.0.6 build-ascension
-          </p>
+        <footer className="text-center pt-20 pb-10 text-neutral-800 text-[10px] font-black uppercase tracking-[1em]">
+          Shadow Monarch Control Terminal v1.1.0
         </footer>
-
       </div>
     </main>
   );
