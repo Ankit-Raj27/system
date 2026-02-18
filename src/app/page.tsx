@@ -7,7 +7,10 @@ import { QuoteScroller } from '@/components/QuoteScroller';
 import { MOTIVATION_REMINDERS } from '@/lib/constants';
 import { Zap } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
+// force-dynamic is only compatible with SSR (Vercel)
+// For static export (GitHub Pages), this must be removed.
+// We handle this via environment detection in next.config.js
+export const dynamic = process.env.GITHUB_PAGES ? 'force-static' : 'force-dynamic';
 
 export default async function DashboardPage() {
   let metricsRaw: any[] = [];
@@ -21,9 +24,9 @@ export default async function DashboardPage() {
       getLogs(),
       getTrends()
     ]);
-    metricsRaw = results[0];
-    logsRaw = results[1];
-    trendsRaw = results[2];
+    metricsRaw = results[0] || [];
+    logsRaw = results[1] || [];
+    trendsRaw = results[2] || [];
   } catch (err: any) {
     console.error("Notion Sync Failure:", err);
     error = err.message || "Failed to synchronize with Notion.";
@@ -39,7 +42,7 @@ export default async function DashboardPage() {
   };
 
   // Extract logs
-  const logs = (logsRaw || []).map((page: any) => ({
+  const logs = logsRaw.map((page: any) => ({
     id: page.id,
     date: page.properties.Date?.title[0]?.plain_text || 'N/A',
     verdict: page.properties['Overall Verdict']?.select?.name || 'FAILED',
@@ -51,7 +54,7 @@ export default async function DashboardPage() {
   }));
 
   // Extract trends
-  const trends = (trendsRaw || []).map((page: any) => ({
+  const trends = trendsRaw.map((page: any) => ({
     week: page.properties.Week?.title[0]?.plain_text || 'W00',
     score: page.properties['Avg Score']?.number || 0
   }));
