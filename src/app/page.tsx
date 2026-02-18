@@ -5,14 +5,29 @@ import { ProgressChart } from '@/components/ProgressChart';
 import { SystemNotification } from '@/components/SystemNotification';
 import { QuoteScroller } from '@/components/QuoteScroller';
 import { MOTIVATION_REMINDERS } from '@/lib/constants';
-import { Target, Zap } from 'lucide-react';
+import { Zap } from 'lucide-react';
+
+export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
-  const [metricsRaw, logsRaw, trendsRaw] = await Promise.all([
-    getMetrics(),
-    getLogs(),
-    getTrends()
-  ]);
+  let metricsRaw: any[] = [];
+  let logsRaw: any[] = [];
+  let trendsRaw: any[] = [];
+  let error: string | null = null;
+
+  try {
+    const results = await Promise.all([
+      getMetrics(),
+      getLogs(),
+      getTrends()
+    ]);
+    metricsRaw = results[0];
+    logsRaw = results[1];
+    trendsRaw = results[2];
+  } catch (err: any) {
+    console.error("Notion Sync Failure:", err);
+    error = err.message || "Failed to synchronize with Notion.";
+  }
 
   // Extract metrics
   const metricRow = (metricsRaw[0] as any)?.properties || {};
@@ -24,7 +39,7 @@ export default async function DashboardPage() {
   };
 
   // Extract logs
-  const logs = logsRaw.map((page: any) => ({
+  const logs = (logsRaw || []).map((page: any) => ({
     id: page.id,
     date: page.properties.Date?.title[0]?.plain_text || 'N/A',
     verdict: page.properties['Overall Verdict']?.select?.name || 'FAILED',
@@ -36,7 +51,7 @@ export default async function DashboardPage() {
   }));
 
   // Extract trends
-  const trends = trendsRaw.map((page: any) => ({
+  const trends = (trendsRaw || []).map((page: any) => ({
     week: page.properties.Week?.title[0]?.plain_text || 'W00',
     score: page.properties['Avg Score']?.number || 0
   }));
@@ -55,7 +70,7 @@ export default async function DashboardPage() {
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-white/5 pb-10">
           <div className="space-y-4">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-sm bg-blue-500/10 border-l-4 border-blue-500 text-blue-400 text-[10px] font-black uppercase tracking-[0.3em]">
-              <Zap className="w-3 h-3 fill-current" /> [ System v1.0.4 Online ]
+              <Zap className="w-3 h-3 fill-current" /> [ System v1.0.6 Online ]
             </div>
             <h1 className="text-5xl md:text-8xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-neutral-600">
               ASCENSION
@@ -72,6 +87,14 @@ export default async function DashboardPage() {
             <div className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Days to S-Rank Deadline</div>
           </div>
         </header>
+
+        {error && (
+          <div className="p-4 rounded border border-red-500/50 bg-red-500/10 text-red-400 text-sm font-mono">
+            [ SYSTEM ERROR ]: {error}
+            <br/>
+            Check Vercel Environment Variables and Notion Integrations.
+          </div>
+        )}
 
         <QuoteScroller />
 
@@ -182,7 +205,7 @@ export default async function DashboardPage() {
             Shadow Monarch Control Terminal
           </div>
           <p className="text-neutral-700 text-xs font-mono uppercase tracking-widest">
-            Level up or be forgotten • v1.0.4 build-ascension
+            Level up or be forgotten • v1.0.6 build-ascension
           </p>
         </footer>
 

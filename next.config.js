@@ -1,13 +1,11 @@
 /** @type {import('next').NextConfig} */
-const isVercel = !!process.env.VERCEL;
-const isGitHubPages = !!process.env.GITHUB_ACTIONS || (!isVercel && process.env.NODE_ENV === 'production');
-
 const nextConfig = {
-  // SSR for Vercel, Static for GitHub Pages
-  output: isVercel ? undefined : 'export',
+  // Static export is only for GitHub Pages. 
+  // Vercel will ignore this if we don't set it, or we can use an environment variable.
+  output: process.env.GITHUB_PAGES ? 'export' : undefined,
   
-  // Base path only for GitHub Pages
-  basePath: isVercel ? '' : '/system',
+  // Base path is only for GitHub Pages
+  basePath: process.env.GITHUB_PAGES ? '/system' : '',
   
   trailingSlash: true,
   
