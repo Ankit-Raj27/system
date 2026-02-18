@@ -4,7 +4,6 @@ import { EvaluationTable } from '@/components/EvaluationTable';
 import { ProgressChart } from '@/components/ProgressChart';
 import { Flame, Trophy, Calendar, Target } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
   const [metricsRaw, logsRaw, trendsRaw] = await Promise.all([
