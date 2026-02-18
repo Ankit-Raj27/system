@@ -7,9 +7,7 @@ import { QuoteScroller } from '@/components/QuoteScroller';
 import { QuestTable } from '@/components/QuestTable';
 import { MasteryRadar } from '@/components/MasteryRadar';
 import { MOTIVATION_REMINDERS } from '@/lib/constants';
-import { Target, Zap, Swords, Box, Layout, GraduationCap } from 'lucide-react';
-
-export const dynamic = 'force-dynamic';
+import { Zap } from 'lucide-react';
 
 export default async function DashboardPage() {
   let metricsRaw: any[] = [];
@@ -82,7 +80,7 @@ export default async function DashboardPage() {
   ];
 
   // Extract logs
-  const logs = logsRaw.map((page: any) => ({
+  const logs = (logsRaw || []).map((page: any) => ({
     id: page.id,
     date: page.properties.Date?.title[0]?.plain_text || 'N/A',
     verdict: page.properties['Overall Verdict']?.select?.name || 'FAILED',
@@ -94,7 +92,7 @@ export default async function DashboardPage() {
   }));
 
   // Extract trends
-  const trends = trendsRaw.map((page: any) => ({
+  const trends = (trendsRaw || []).map((page: any) => ({
     week: page.properties.Week?.title[0]?.plain_text || 'W00',
     score: page.properties['Avg Score']?.number || 0
   }));
@@ -111,7 +109,7 @@ export default async function DashboardPage() {
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-white/5 pb-10">
           <div className="space-y-4">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-sm bg-blue-500/10 border-l-4 border-blue-500 text-blue-400 text-[10px] font-black uppercase tracking-[0.3em]">
-              <Zap className="w-3 h-3 fill-current" /> [ System v1.1.0 Online ]
+              <Zap className="w-3 h-3 fill-current" /> [ System v1.1.1 Online ]
             </div>
             <h1 className="text-5xl md:text-8xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-neutral-600">
               ASCENSION
@@ -182,7 +180,7 @@ export default async function DashboardPage() {
         </section>
 
         <footer className="text-center pt-20 pb-10 text-neutral-800 text-[10px] font-black uppercase tracking-[1em]">
-          Shadow Monarch Control Terminal v1.1.0
+          Shadow Monarch Control Terminal v1.1.1
         </footer>
       </div>
     </main>
