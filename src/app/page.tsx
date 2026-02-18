@@ -11,7 +11,6 @@ import { AddQuestModal } from '@/components/AddQuestModal';
 import { MOTIVATION_REMINDERS } from '@/lib/constants';
 import { Zap, Activity, Brain, Dumbbell, Timer, Target, Trophy, Flame, ShieldAlert } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
   // Individual result handling for maximum resiliency
