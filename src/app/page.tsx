@@ -1,8 +1,11 @@
 import { getMetrics, getLogs, getTrends } from '@/lib/notion';
-import { StatsCard } from '@/components/StatsCard';
+import { StatusWindow } from '@/components/StatusWindow';
 import { EvaluationTable } from '@/components/EvaluationTable';
 import { ProgressChart } from '@/components/ProgressChart';
-import { Flame, Trophy, Calendar, Target } from 'lucide-react';
+import { SystemNotification } from '@/components/SystemNotification';
+import { QuoteScroller } from '@/components/QuoteScroller';
+import { MOTIVATION_REMINDERS } from '@/lib/constants';
+import { Flame, Trophy, Calendar, Target, Shield, Zap } from 'lucide-react';
 
 
 export default async function DashboardPage() {
@@ -12,7 +15,7 @@ export default async function DashboardPage() {
     getTrends()
   ]);
 
-  // Extract metrics (assuming first row in the metrics DB)
+  // Extract metrics
   const metricRow = (metricsRaw[0] as any)?.properties || {};
   const stats = {
     streak: metricRow['Current Streak']?.number || 0,
@@ -40,99 +43,157 @@ export default async function DashboardPage() {
   }));
 
   return (
-    <main className="min-h-screen bg-neutral-950 text-white p-6 md:p-12 font-sans selection:bg-blue-500/30">
-      <div className="max-w-7xl mx-auto space-y-12">
+    <main className="relative min-h-screen bg-[#050505] text-white p-6 md:p-12 font-sans selection:bg-blue-500/30 overflow-x-hidden">
+      
+      {/* Dynamic Background Noise/Texture */}
+      <div className="fixed inset-0 pointer-events-none opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
+      
+      <div className="relative max-w-7xl mx-auto space-y-12">
         
-        {/* Header */}
-        <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/10 pb-8">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-widest mb-4">
-              <Target className="w-3 h-3" /> System Operational
+        {/* System Notifications Overlay */}
+        <div className="fixed top-6 right-6 w-80 z-50 pointer-events-auto">
+          <SystemNotification messages={MOTIVATION_REMINDERS} type="quest" />
+        </div>
+
+        {/* Header Section */}
+        <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-white/5 pb-10">
+          <div className="space-y-4">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-sm bg-blue-500/10 border-l-4 border-blue-500 text-blue-400 text-[10px] font-black uppercase tracking-[0.3em]">
+              <Zap className="w-3 h-3 fill-current" /> [ System v1.0.4 Online ]
             </div>
-            <h1 className="text-4xl md:text-6xl font-black tracking-tighter">S-RANK ASCENSION</h1>
-            <p className="text-neutral-500 mt-2 text-lg italic">The gap between intention and action is where rank is decided.</p>
+            <h1 className="text-5xl md:text-8xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-neutral-600">
+              ASCENSION
+            </h1>
+            <p className="text-neutral-500 text-lg font-medium italic border-l-2 border-neutral-800 pl-4 max-w-md">
+              "You are being evaluated. Every action consumes mana. Only those who level up will survive."
+            </p>
           </div>
-          <div className="text-right">
-            <div className="text-5xl font-black text-orange-500 tracking-tighter">{stats.countdown}</div>
-            <div className="text-xs font-bold text-neutral-600 uppercase tracking-widest">Days to Deadline</div>
+          <div className="flex flex-col items-end gap-2">
+            <div className="text-sm font-black uppercase tracking-[0.4em] text-neutral-600">Time Until Reset</div>
+            <div className="text-7xl font-black text-orange-500 tabular-nums tracking-tighter shadow-orange-500/20 drop-shadow-2xl">
+              {stats.countdown}
+            </div>
+            <div className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Days to S-Rank Deadline</div>
           </div>
         </header>
 
-        {/* Stats Grid */}
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatsCard 
-            title="Current Streak" 
-            value={`${stats.streak} Days`} 
+        {/* Quest Quote Scroller */}
+        <QuoteScroller />
+
+        {/* Status Windows Grid */}
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <StatusWindow 
+            label="Current Streak" 
+            value={`${stats.streak} DAYS`} 
             icon={Flame} 
             color="orange" 
             description="Consecutive Successes"
           />
-          <StatsCard 
-            title="Success Rate" 
+          <StatusWindow 
+            label="Power Level" 
             value={`${stats.successRate}%`} 
             icon={Target} 
-            color="green" 
+            color="cyan" 
             description="Overall Consistency"
           />
-          <StatsCard 
-            title="Total Successes" 
+          <StatusWindow 
+            label="Dungeons Cleared" 
             value={stats.totalSuccess} 
             icon={Trophy} 
-            color="blue" 
-            description="Cleared Dungeons"
+            color="green" 
+            description="Total Successful Days"
           />
-          <StatsCard 
-            title="Next Milestone" 
-            value="S-Rank" 
-            icon={Calendar} 
+          <StatusWindow 
+            label="Current Rank" 
+            value="E-RANK" 
+            icon={Shield} 
             color="red" 
-            description="July 27, 2026"
+            description="Promotion Pending"
           />
         </section>
 
-        {/* Trends & Visualization */}
-        <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-4">
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <div className="w-1 h-6 bg-blue-500 rounded-full" />
-              Mastery Growth Trend
-            </h2>
+        {/* Growth & Status Section */}
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="flex items-center justify-between border-b border-white/5 pb-4">
+              <h2 className="text-2xl font-black tracking-tight flex items-center gap-3">
+                <div className="w-1.5 h-6 bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+                MASTERY TREND
+              </h2>
+              <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Growth Analytics</span>
+            </div>
             <ProgressChart trends={trends} />
           </div>
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <div className="w-1 h-6 bg-orange-500 rounded-full" />
-              System Status
-            </h2>
-            <div className="p-6 rounded-xl border border-white/10 bg-white/5 space-y-4">
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs font-bold text-neutral-500 uppercase">
-                  <span>Power Level</span>
-                  <span>{stats.successRate}%</span>
+          
+          <div className="space-y-6">
+            <div className="border-b border-white/5 pb-4">
+              <h2 className="text-2xl font-black tracking-tight flex items-center gap-3">
+                <div className="w-1.5 h-6 bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.5)]" />
+                SYSTEM LOG
+              </h2>
+            </div>
+            <div className="p-8 rounded-lg border border-white/5 bg-gradient-to-b from-neutral-900 to-black space-y-8 relative overflow-hidden">
+              <div className="space-y-4 relative z-10">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-[10px] font-black text-neutral-500 uppercase tracking-widest">
+                    <span>Soul Sync Rate</span>
+                    <span className="text-blue-400 font-mono">{stats.successRate}%</span>
+                  </div>
+                  <div className="h-1 w-full bg-neutral-800 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-blue-600 to-cyan-400 rounded-full shadow-[0_0_10px_rgba(34,211,238,0.5)] transition-all duration-1000" 
+                      style={{ width: `${stats.successRate}%` }} 
+                    />
+                  </div>
                 </div>
-                <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                  <div className="h-full bg-blue-500 rounded-full transition-all duration-1000" style={{ width: `${stats.successRate}%` }} />
+                <div className="space-y-2">
+                  <div className="flex justify-between text-[10px] font-black text-neutral-500 uppercase tracking-widest">
+                    <span>Rank Progression</span>
+                    <span className="text-orange-400 font-mono">15%</span>
+                  </div>
+                  <div className="h-1 w-full bg-neutral-800 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-orange-600 to-yellow-400 rounded-full shadow-[0_0_10px_rgba(249,115,22,0.5)] transition-all duration-1000" 
+                      style={{ width: `15%` }} 
+                    />
+                  </div>
                 </div>
               </div>
-              <p className="text-sm text-neutral-400 leading-relaxed italic">
-                "Weakness is information. Discipline is freedom. You are currently tracked as an E-Rank hunter. Level up or remain obsolete."
+              <p className="text-sm text-neutral-400 leading-relaxed font-medium italic border-t border-white/5 pt-6">
+                "The System tracks every breath. Your power level is calculated based on discipline, focus, and output. Do not disappoint the Monarch."
               </p>
+              
+              {/* Decorative scanline effect */}
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-500/5 to-transparent h-[200%] w-full animate-scan pointer-events-none" />
             </div>
           </div>
         </section>
 
-        {/* Evaluation Table */}
-        <section className="space-y-6">
-          <h2 className="text-2xl font-black tracking-tight flex items-center gap-2">
-            <div className="w-1 h-8 bg-white rounded-full" />
-            BATTLE LOGS
-          </h2>
+        {/* Battle Logs Section */}
+        <section className="space-y-8 pb-20">
+          <div className="flex items-center justify-between border-b border-white/5 pb-4">
+            <h2 className="text-3xl font-black tracking-tighter flex items-center gap-4">
+              <div className="w-1.5 h-10 bg-white" />
+              BATTLE LOGS
+            </h2>
+            <div className="flex gap-4">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                <span className="text-[10px] font-bold text-neutral-500 uppercase">Live Feed</span>
+              </div>
+            </div>
+          </div>
           <EvaluationTable logs={logs} />
         </section>
 
-        {/* Footer */}
-        <footer className="text-center pt-12 text-neutral-700 text-xs font-mono uppercase tracking-[0.2em]">
-          Automated System Dashboard v1.0 • Built by OpenClaw for Switch
+        {/* Global Footer */}
+        <footer className="text-center pt-20 pb-10 space-y-4">
+          <div className="text-neutral-800 text-[10px] font-black uppercase tracking-[1em]">
+            Shadow Monarch Control Terminal
+          </div>
+          <p className="text-neutral-700 text-xs font-mono uppercase tracking-widest">
+            Level up or be forgotten • v1.0.4 build-ascension
+          </p>
         </footer>
 
       </div>
