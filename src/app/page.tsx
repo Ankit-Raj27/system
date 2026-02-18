@@ -7,7 +7,6 @@ import { SystemNotification } from '@/components/SystemNotification';
 import { MOTIVATION_REMINDERS } from '@/lib/constants';
 import { AddQuestModal } from '@/components/AddQuestModal';
 
-export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
   const safeFetch = async (fn: () => Promise<any>, fallback: any, name: string) => {
