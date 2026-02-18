@@ -9,11 +9,11 @@ export function SidebarVitals({ hunter, stats }: { hunter: any, stats: any }) {
     <aside className="w-full md:w-80 bg-[#0a0a0a] border-b md:border-b-0 md:border-r border-white/5 p-6 space-y-8 relative z-20 flex-shrink-0">
       <div className="space-y-4">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-sm bg-blue-500/10 border-l-2 border-blue-500 text-blue-400 text-[9px] font-black uppercase tracking-[0.2em]">
-          <Zap className="w-3 h-3 fill-current" /> System v1.3.0
+          <Zap className="w-3 h-3 fill-current" /> System v1.3.2
         </div>
         <div>
           <h2 className="text-xs font-black text-neutral-500 uppercase tracking-widest mb-1">Hunter Identity</h2>
-          <div className="text-2xl font-black tracking-tighter uppercase leading-none">Ankit Kushwaha</div>
+          <div className="text-2xl font-black tracking-tighter uppercase leading-none">switchengeek</div>
         </div>
         
         <div className="flex items-center gap-3">
