@@ -6,6 +6,7 @@ import { SystemNotification } from '@/components/SystemNotification';
 import { QuoteScroller } from '@/components/QuoteScroller';
 import { QuestTable } from '@/components/QuestTable';
 import { MasteryRadar } from '@/components/MasteryRadar';
+import { AddQuestModal } from '@/components/AddQuestModal';
 import { MOTIVATION_REMINDERS } from '@/lib/constants';
 import { Zap } from 'lucide-react';
 
@@ -20,10 +21,6 @@ export default async function DashboardPage() {
   let error: string | null = null;
 
   try {
-    // Log environment variables for debugging (server-side console only)
-    console.log("NOTION_API_KEY present:", !!process.env.NOTION_API_KEY);
-    console.log("NOTION_LOGS_DB_ID:", process.env.NOTION_LOGS_DB_ID);
-
     const results = await Promise.all([
       getMetrics(),
       getLogs(),
@@ -84,7 +81,7 @@ export default async function DashboardPage() {
   ];
 
   // Extract logs
-  const logs = logsRaw.map((page: any) => ({
+  const logs = (logsRaw || []).map((page: any) => ({
     id: page.id,
     date: page.properties.Date?.title[0]?.plain_text || 'N/A',
     verdict: page.properties['Overall Verdict']?.select?.name || 'FAILED',
@@ -96,7 +93,7 @@ export default async function DashboardPage() {
   }));
 
   // Extract trends
-  const trends = trendsRaw.map((page: any) => ({
+  const trends = (trendsRaw || []).map((page: any) => ({
     week: page.properties.Week?.title[0]?.plain_text || 'W00',
     score: page.properties['Avg Score']?.number || 0
   }));
@@ -105,34 +102,31 @@ export default async function DashboardPage() {
     <main className="relative min-h-screen bg-[#050505] text-white p-6 md:p-12 font-sans selection:bg-blue-500/30 overflow-x-hidden">
       <div className="fixed inset-0 pointer-events-none opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
       
-      <div className="relative max-w-7xl mx-auto space-y-12">
+      <div className="relative max-w-7xl mx-auto space-y-12 pb-24">
         <div className="fixed top-6 right-6 w-80 z-50 pointer-events-auto">
           <SystemNotification messages={MOTIVATION_REMINDERS} type="quest" />
         </div>
 
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-white/5 pb-10">
-          <div className="space-y-4">
+          <div className="space-y-4 text-center md:text-left">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-sm bg-blue-500/10 border-l-4 border-blue-500 text-blue-400 text-[10px] font-black uppercase tracking-[0.3em]">
-              <Zap className="w-3 h-3 fill-current" /> [ System v1.1.2 Online ]
+              <Zap className="w-3 h-3 fill-current" /> [ System v1.2.0 Online ]
             </div>
-            <h1 className="text-5xl md:text-8xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-neutral-600">
+            <h1 className="text-6xl md:text-9xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-neutral-700 leading-none">
               ASCENSION
             </h1>
           </div>
-          <div className="flex flex-col items-end gap-2">
-            <div className="text-sm font-black uppercase tracking-[0.4em] text-neutral-600">Time Until Reset</div>
-            <div className="text-7xl font-black text-orange-500 tabular-nums tracking-tighter shadow-orange-500/20 drop-shadow-2xl">
+          <div className="flex flex-col items-center md:items-end gap-2">
+            <div className="text-xs font-black uppercase tracking-[0.4em] text-neutral-600">Soul Counter</div>
+            <div className="text-8xl font-black text-orange-500 tabular-nums tracking-tighter shadow-orange-500/10 drop-shadow-2xl leading-none">
               {stats.countdown}
             </div>
           </div>
         </header>
 
         {error && (
-          <div className="p-4 rounded border border-red-500/50 bg-red-500/10 text-red-400 text-sm font-mono">
+          <div className="p-4 rounded border border-red-500/50 bg-red-500/10 text-red-400 text-xs font-mono uppercase tracking-tighter">
             [ SYSTEM ERROR ]: {error}
-            <div className="mt-2 text-xs opacity-50">
-              Diagnostic: Ensure all NOTION_..._DB_ID variables are set in Vercel.
-            </div>
           </div>
         )}
 
@@ -140,55 +134,60 @@ export default async function DashboardPage() {
 
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatusWindow label="Streak" value={stats.streak} iconType="flame" color="orange" />
-          <StatusWindow label="Power" value={`${stats.successRate}%`} iconType="target" color="cyan" />
+          <StatusWindow label="Sync" value={`${stats.successRate}%`} iconType="target" color="cyan" />
           <StatusWindow label="Clears" value={stats.totalSuccess} iconType="trophy" color="green" />
           <StatusWindow label="Rank" value="E-RANK" iconType="shield" color="red" />
         </section>
 
-        {/* Global Mastery Radar */}
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           <div className="lg:col-span-1 space-y-6">
             <div className="border-b border-white/5 pb-4">
               <h2 className="text-xl font-black tracking-tight flex items-center gap-3">
-                <div className="w-1 h-6 bg-blue-500" />
-                COMPETENCE RADAR
+                <div className="w-1 h-6 bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+                COMPETENCE
               </h2>
             </div>
             <MasteryRadar data={radarData} />
           </div>
           <div className="lg:col-span-2 space-y-6">
-            <div className="border-b border-white/5 pb-4">
+            <div className="border-b border-white/5 pb-4 flex justify-between items-center">
               <h2 className="text-xl font-black tracking-tight flex items-center gap-3">
-                <div className="w-1 h-6 bg-orange-500" />
+                <div className="w-1 h-6 bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.5)]" />
                 MASTERY TREND
               </h2>
+              <span className="text-[10px] font-bold text-neutral-600 uppercase tracking-[0.2em]">Real-time Telemetry</span>
             </div>
             <ProgressChart trends={trends} />
           </div>
         </section>
 
-        {/* Dungeon Sections (Quests) */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-10">
-          <div className="space-y-10">
-             <QuestTable title="DSA DUNGEON" quests={dsaQuests.slice(0, 5)} />
-             <QuestTable title="LLD BLUEPRINTS" quests={lldQuests.slice(0, 5)} />
+          <div className="space-y-12">
+             <QuestTable title="DSA DUNGEON" quests={dsaQuests.slice(0, 8)} />
+             <QuestTable title="LLD BLUEPRINTS" quests={lldQuests.slice(0, 8)} />
           </div>
-          <div className="space-y-10">
-             <QuestTable title="HLD SYSTEMS" quests={hldQuests.slice(0, 5)} />
-             <QuestTable title="COHORT MODULES" quests={cohortQuests.slice(0, 5)} />
+          <div className="space-y-12">
+             <QuestTable title="HLD SYSTEMS" quests={hldQuests.slice(0, 8)} />
+             <QuestTable title="COHORT TRACKS" quests={cohortQuests.slice(0, 8)} />
           </div>
         </section>
 
         <section className="space-y-8">
-          <div className="border-b border-white/5 pb-4">
-            <h2 className="text-2xl font-black tracking-tighter">BATTLE LOGS</h2>
+          <div className="border-b border-white/5 pb-4 flex justify-between items-center">
+            <h2 className="text-2xl font-black tracking-tighter uppercase opacity-80">Battle Log</h2>
+            <div className="px-3 py-1 rounded-full bg-green-500/5 border border-green-500/20 text-green-500 text-[9px] font-black uppercase tracking-widest">
+              Automated Judge Active
+            </div>
           </div>
           <EvaluationTable logs={logs} />
         </section>
 
-        <footer className="text-center pt-20 pb-10 text-neutral-800 text-[10px] font-black uppercase tracking-[1em]">
-          Shadow Monarch Control Terminal v1.1.2
+        <footer className="text-center pt-20 text-neutral-800 text-[10px] font-black uppercase tracking-[1.5em] opacity-30">
+          Shadow Monarch Control Terminal
         </footer>
+
+        {/* Global Admin Tool */}
+        <AddQuestModal />
       </div>
     </main>
   );
