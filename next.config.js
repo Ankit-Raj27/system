@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Removed basePath and assetPrefix for compatibility with Vercel root deployment
+  // SSR mode for Vercel (real-time Notion updates)
   images: {
     unoptimized: true,
   },
