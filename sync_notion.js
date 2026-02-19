@@ -139,6 +139,32 @@ async function updateNotion() {
     };
     await request(options, JSON.stringify({ parent: { database_id: actualDbId }, properties }));
   }
+
+  // 3. UPDATE VITAL DB (FOR SIDEBAR)
+  const metricsRowId = state.notion.metrics_row_id;
+  console.log(`Updating Metrics Row: ${metricsRowId}`);
+  const metricOptions = {
+    hostname: 'api.notion.com',
+    path: `/v1/pages/${metricsRowId}`,
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${NOTION_KEY}`,
+      'Notion-Version': '2022-06-28',
+      'Content-Type': 'application/json'
+    }
+  };
+  // Map our calculated vitals back to the Notion Metrics properties
+  await request(metricOptions, JSON.stringify({
+    properties: {
+      "Current Health": { "number": healthScore * 10 }, // Scale to 100
+      "Current Mana": { "number": manaPoints },
+      "Strength": { "number": 12 }, // Temporary level up flex
+      "Intelligence": { "number": 15 },
+      "Endurance": { "number": 8 },
+      "Focus": { "number": 10 },
+      "Discipline": { "number": 9 }
+    }
+  }));
 }
 
 updateNotion().catch(err => {
