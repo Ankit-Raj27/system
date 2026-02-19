@@ -15,10 +15,32 @@ function parseMemory() {
   const content = fs.readFileSync(MEMORY_FILE, 'utf8');
   const lunchMatch = content.match(/- Lunch: (.*)/);
   const breakfastMatch = content.match(/- Breakfast: (.*)/);
+  const wakeMatch = content.match(/- User woke up at (.*)/);
+  
   return {
     lunch: lunchMatch ? lunchMatch[1] : 'Unknown',
-    breakfast: breakfastMatch ? breakfastMatch[1] : 'Unknown'
+    breakfast: breakfastMatch ? breakfastMatch[1] : 'Unknown',
+    wakeTime: wakeMatch ? wakeMatch[1] : 'Unknown'
   };
+}
+
+async function request(options, data) {
+  return new Promise((resolve, reject) => {
+    const req = https.request(options, res => {
+      let resBody = '';
+      res.on('data', d => resBody += d);
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          resolve(resBody ? JSON.parse(resBody) : {});
+        } else {
+          reject(new Error(`Status ${res.statusCode}: ${resBody}`));
+        }
+      });
+    });
+    req.on('error', reject);
+    if (data) req.write(data);
+    req.end();
+  });
 }
 
 async function getActualDbId(logDbId) {
@@ -31,23 +53,29 @@ async function getActualDbId(logDbId) {
       'Notion-Version': '2025-09-03'
     }
   };
+  const dbInfo = await request(options);
+  return dbInfo.parent.database_id;
+}
 
-  return new Promise((resolve, reject) => {
-    const req = https.request(options, res => {
-      let resBody = '';
-      res.on('data', d => resBody += d);
-      res.on('end', () => {
-        if (res.statusCode === 200) {
-          const dbInfo = JSON.parse(resBody);
-          resolve(dbInfo.parent.database_id);
-        } else {
-          reject(new Error(resBody));
-        }
-      });
-    });
-    req.on('error', reject);
-    req.end();
+async function findExistingPage(dbId, date) {
+  const options = {
+    hostname: 'api.notion.com',
+    path: `/v1/databases/${dbId}/query`,
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${NOTION_KEY}`,
+      'Notion-Version': '2022-06-28',
+      'Content-Type': 'application/json'
+    }
+  };
+  const query = JSON.stringify({
+    filter: {
+      property: "Date",
+      title: { equals: date }
+    }
   });
+  const result = await request(options, query);
+  return result.results.length > 0 ? result.results[0].id : null;
 }
 
 async function updateNotion() {
@@ -56,50 +84,51 @@ async function updateNotion() {
   const logDbId = state.notion.logs_db_id;
 
   const actualDbId = await getActualDbId(logDbId);
-
-  console.log(`Updating Notion Database: ${actualDbId}`);
-
   const today = new Date().toISOString().split('T')[0];
-  const data = JSON.stringify({
-    parent: { database_id: actualDbId },
-    properties: {
-      "Date": { "title": [{ "text": { "content": today } }] },
-      "Reason": { "rich_text": [{ "text": { "content": `B: ${memory.breakfast} | L: ${memory.lunch}` } }] },
-      "Learning Progress": { "number": 10 },
-      "Work Output": { "number": 10 },
-      "Health Discipline": { "number": 6 }
-    }
-  });
 
-  const options = {
-    hostname: 'api.notion.com',
-    path: '/v1/pages',
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${NOTION_KEY}`,
-      'Notion-Version': '2025-09-03',
-      'Content-Type': 'application/json'
-    }
+  const existingPageId = await findExistingPage(actualDbId, today);
+
+  let healthScore = 10;
+  if (!memory.wakeTime.includes('05:00')) healthScore -= 2;
+  if (memory.lunch.toLowerCase().includes('small chicken')) healthScore -= 2;
+
+  const properties = {
+    "Reason": { "rich_text": [{ "text": { "content": `B: ${memory.breakfast} | L: ${memory.lunch}` } }] },
+    "Health Discipline": { "number": healthScore },
+    "Learning Progress": { "number": 10 },
+    "Work Output": { "number": 10 },
+    "Overall Verdict": { "select": { "name": "SUCCESS" } }
   };
 
-  return new Promise((resolve, reject) => {
-    const req = https.request(options, res => {
-      let resBody = '';
-      res.on('data', d => resBody += d);
-      res.on('end', () => {
-        if (res.statusCode === 200) {
-          console.log("Successfully updated Notion Battle Log.");
-          resolve();
-        } else {
-          console.error("Failed to update Notion:", resBody);
-          reject(new Error(resBody));
-        }
-      });
-    });
-    req.on('error', reject);
-    req.write(data);
-    req.end();
-  });
+  if (existingPageId) {
+    const options = {
+      hostname: 'api.notion.com',
+      path: `/v1/pages/${existingPageId}`,
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${NOTION_KEY}`,
+        'Notion-Version': '2022-06-28',
+        'Content-Type': 'application/json'
+      }
+    };
+    await request(options, JSON.stringify({ properties }));
+  } else {
+    properties["Date"] = { "title": [{ "text": { "content": today } }] };
+    const options = {
+      hostname: 'api.notion.com',
+      path: '/v1/pages',
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${NOTION_KEY}`,
+        'Notion-Version': '2022-06-28',
+        'Content-Type': 'application/json'
+      }
+    };
+    await request(options, JSON.stringify({ parent: { database_id: actualDbId }, properties }));
+  }
 }
 
-updateNotion().catch(console.error);
+updateNotion().catch(err => {
+  console.error(err);
+  process.exit(1);
+});
