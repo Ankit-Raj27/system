@@ -7,6 +7,19 @@ const NOTION_KEY = process.env.NOTION_API_KEY;
 const STATE_FILE = path.join(__dirname, 'memory', 'achieve_state.json');
 const MEMORY_FILE = path.join(__dirname, 'memory', '2026-02-19.md');
 
+console.log('Build Environment Check:');
+console.log('Current Dir:', __dirname);
+if (fs.existsSync(STATE_FILE)) {
+  console.log('STATE_FILE found at:', STATE_FILE);
+} else {
+  console.log('STATE_FILE MISSING at:', STATE_FILE);
+  const files = fs.readdirSync(__dirname);
+  console.log('Files in root:', files);
+  if (fs.existsSync(path.join(__dirname, 'memory'))) {
+     console.log('Memory folder exists. Files in memory:', fs.readdirSync(path.join(__dirname, 'memory')));
+  }
+}
+
 function loadState() {
   return JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
 }
