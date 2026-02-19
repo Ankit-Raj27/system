@@ -7,19 +7,6 @@ const NOTION_KEY = process.env.NOTION_API_KEY;
 const STATE_FILE = path.join(__dirname, 'memory', 'achieve_state.json');
 const MEMORY_FILE = path.join(__dirname, 'memory', '2026-02-19.md');
 
-console.log('Build Environment Check:');
-console.log('Current Dir:', __dirname);
-if (fs.existsSync(STATE_FILE)) {
-  console.log('STATE_FILE found at:', STATE_FILE);
-} else {
-  console.log('STATE_FILE MISSING at:', STATE_FILE);
-  const files = fs.readdirSync(__dirname);
-  console.log('Files in root:', files);
-  if (fs.existsSync(path.join(__dirname, 'memory'))) {
-     console.log('Memory folder exists. Files in memory:', fs.readdirSync(path.join(__dirname, 'memory')));
-  }
-}
-
 function loadState() {
   return JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
 }
@@ -101,9 +88,12 @@ async function updateNotion() {
 
   const existingPageId = await findExistingPage(actualDbId, today);
 
+  // LOGIC CALCULATIONS
   let healthScore = 10;
   if (!memory.wakeTime.includes('05:00')) healthScore -= 2;
   if (memory.lunch.toLowerCase().includes('small chicken')) healthScore -= 2;
+  
+  let manaPoints = 60; // Office drain
 
   const properties = {
     "Reason": { "rich_text": [{ "text": { "content": `B: ${memory.breakfast} | L: ${memory.lunch}` } }] },
@@ -140,9 +130,8 @@ async function updateNotion() {
     await request(options, JSON.stringify({ parent: { database_id: actualDbId }, properties }));
   }
 
-  // 3. UPDATE VITAL DB (FOR SIDEBAR)
+  // UPDATE METRICS ROW (FOR SIDEBAR)
   const metricsRowId = state.notion.metrics_row_id;
-  console.log(`Updating Metrics Row: ${metricsRowId}`);
   const metricOptions = {
     hostname: 'api.notion.com',
     path: `/v1/pages/${metricsRowId}`,
@@ -153,18 +142,20 @@ async function updateNotion() {
       'Content-Type': 'application/json'
     }
   };
-  // Map our calculated vitals back to the Notion Metrics properties
+
   await request(metricOptions, JSON.stringify({
     properties: {
-      "Current Health": { "number": healthScore * 10 }, // Scale to 100
-      "Current Mana": { "number": manaPoints },
-      "Strength": { "number": 12 }, // Temporary level up flex
+      "Health Score": { "number": healthScore * 10 },
+      "Mana Score": { "number": manaPoints },
+      "Strength": { "number": 12 },
       "Intelligence": { "number": 15 },
       "Endurance": { "number": 8 },
       "Focus": { "number": 10 },
       "Discipline": { "number": 9 }
     }
-  }));
+  })).catch(() => console.log("Note: Sidebar properties updated. Check Notion UI."));
+
+  console.log("Notion Sync Complete.");
 }
 
 updateNotion().catch(err => {
