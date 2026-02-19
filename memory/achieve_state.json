@@ -1,10 +1,13 @@
 {
   "birthday": "2026-07-27",
-  "streak": 1,
-  "longest_streak": 1,
-  "total_days": 1,
-  "success_days": 1,
-  "history": [{"date": "2026-02-18", "verdict": "SUCCESS"}],
+  "streak": 2,
+  "longest_streak": 2,
+  "total_days": 2,
+  "success_days": 2,
+  "history": [
+    {"date": "2026-02-18", "verdict": "SUCCESS"},
+    {"date": "2026-02-19", "verdict": "SUCCESS"}
+  ],
   "notion": {
     "page_id": "30bfec35-203f-8158-be29-eb5843efe21d",
     "logs_db_id": "30bfec35-203f-814a-9681-000b00656bff",
