@@ -1,0 +1,18 @@
+{
+  "birthday": "2026-07-27",
+  "streak": 1,
+  "longest_streak": 1,
+  "total_days": 1,
+  "success_days": 1,
+  "history": [{"date": "2026-02-18", "verdict": "SUCCESS"}],
+  "notion": {
+    "page_id": "30bfec35-203f-8158-be29-eb5843efe21d",
+    "logs_db_id": "30bfec35-203f-814a-9681-000b00656bff",
+    "metrics_db_id": "30bfec35-203f-8105-9969-000ba9613257",
+    "metrics_row_id": "30bfec35-203f-816e-a406-f4602c2a7ce8",
+    "visual_db_id": "30bfec35-203f-8197-abe4-000b7e9237cc",
+    "visual_row_id": "30bfec35-203f-81c9-bc86-f735b58de50c",
+    "trend_db_id": "30bfec35-203f-81d6-b119-000b7b7248ff",
+    "trend_row_id": "30bfec35-203f-81b8-97fb-f2ff9c042625"
+  }
+}
