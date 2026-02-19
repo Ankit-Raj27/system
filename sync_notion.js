@@ -64,7 +64,10 @@ async function updateNotion() {
     parent: { database_id: actualDbId },
     properties: {
       "Date": { "title": [{ "text": { "content": today } }] },
-      "Reason": { "rich_text": [{ "text": { "content": `B: ${memory.breakfast} | L: ${memory.lunch}` } }] }
+      "Reason": { "rich_text": [{ "text": { "content": `B: ${memory.breakfast} | L: ${memory.lunch}` } }] },
+      "Learning Progress": { "number": 10 },
+      "Work Output": { "number": 10 },
+      "Health Discipline": { "number": 6 }
     }
   });
 
