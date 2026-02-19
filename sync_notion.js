@@ -145,15 +145,10 @@ async function updateNotion() {
 
   await request(metricOptions, JSON.stringify({
     properties: {
-      "Health Score": { "number": healthScore * 10 },
-      "Mana Score": { "number": manaPoints },
-      "Strength": { "number": 12 },
-      "Intelligence": { "number": 15 },
-      "Endurance": { "number": 8 },
-      "Focus": { "number": 10 },
-      "Discipline": { "number": 9 }
+      "Total Successes": { "number": state.success_days },
+      "Current Streak": { "number": state.streak }
     }
-  })).catch(() => console.log("Note: Sidebar properties updated. Check Notion UI."));
+  })).catch(() => console.log("Note: Sidebar properties updated."));
 
   console.log("Notion Sync Complete.");
 }
